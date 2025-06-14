@@ -1,2 +1,25 @@
+# Recursos
 /assets
 /assets/*
+
+# Entorno virtual
+venv/
+.venv/
+ENV/
+env/
+bin/
+lib/
+include/
+
+# Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos de entorno o IDE
+*.log
+*.swp
+*.swo
+*.idea/
+.vscode/
+
