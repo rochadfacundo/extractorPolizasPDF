@@ -2,11 +2,12 @@ import pdfplumber
 import pandas as pd
 import re
 import os
+import json
 from openpyxl.utils import get_column_letter
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, PatternFill
 
-pdf_path = "data/polizas/polizaFed4.pdf"
+pdf_path = "data/polizas/polizaFed.pdf"
 nombre_excel = "federacion_patronal.xlsx"
 
 datos = {
@@ -20,43 +21,73 @@ datos = {
     "Archivo": os.path.basename(pdf_path)
 }
 
+# Cargar lista de marcas
+with open("assets/marcasFiltradasId.json", "r", encoding="utf-8") as f:
+    marcas_data = json.load(f)
+lista_marcas = [m["marca"].upper() for m in marcas_data]
+lista_marcas_ordenadas = sorted(lista_marcas, key=lambda x: len(x.split()), reverse=True)
+
 with pdfplumber.open(pdf_path) as pdf:
     texto_completo = "\n".join([p.extract_text() for p in pdf.pages if p.extract_text()])
 
-    # ---------- EXTRACCIONES ----------
     def buscar(patron, texto=texto_completo):
         match = re.search(patron, texto, re.IGNORECASE)
         return match.group(1).strip() if match else "--"
 
-    # Marca
-    datos["Marca"] = buscar(r"Marca\s+([A-Z0-9 /-]+)")
+    # ------- Año -------
+    datos["Año"] = buscar(r"Modelo\s+[^\n]*\n.*\b(\d{4})\b")
 
-    # Modelo
-    datos["Modelo"] = buscar(r"Modelo\s+([A-Z0-9 /.-]+)")
+    # ------- Marca y Modelo -------
+    modelo_match = re.search(r"Modelo\s+[^\n]*\n([^\n]+)", texto_completo, re.IGNORECASE)
+    if modelo_match:
+        linea = modelo_match.group(1).strip().upper()
+        for marca in lista_marcas_ordenadas:
+            if linea.startswith(marca):
+                datos["Marca"] = marca.title()
+                datos["Modelo"] = linea[len(marca):].strip().title()
+                break
 
-    # Año
-    datos["Año"] = buscar(r"A[ÑN]O\s+(\d{4})")
+        # Intentar extraer el año desde el final del modelo
+        anio_match = re.search(r"(19|20)\d{2}$", datos["Modelo"])
+        if anio_match:
+            datos["Año"] = anio_match.group(0)
+            datos["Modelo"] = re.sub(r"\s+(19|20)\d{2}$", "", datos["Modelo"])
+        # ------- Suma Asegurada (tomar la más alta si hay varias) -------
+    
 
-    # Suma Asegurada: más confiable desde “CGDA-DESTRUCCION TOTAL SUMA ASEGURADA”
-    suma_match = re.search(r"CGDA-DESTRUCCION TOTAL\s+SUMA ASEGURADA\s+([0-9.]+,[0-9]{2})", texto_completo, re.IGNORECASE)
-    if not suma_match:
-        suma_match = re.search(r"SUMA ASEGURADA\s+([0-9.]+,[0-9]{2})", texto_completo, re.IGNORECASE)
-    datos["Suma Asegurada"] = suma_match.group(1) if suma_match else "--"
+    # Buscar Suma Asegurada: buscar la mayor suma con formato 000.000.000,00
+    suma_match = re.findall(r"([0-9.]{6,},[0-9]{2})", texto_completo)
+    if suma_match:
+        # Asumo que la más alta es la Suma Asegurada
+        posibles_sumas = [s for s in suma_match if s.count('.') >= 2]
+        datos["Suma Asegurada"] = max(posibles_sumas, key=lambda x: float(x.replace('.', '').replace(',', '.'))) if posibles_sumas else "--"
+    else:
+        datos["Suma Asegurada"] = "--"
 
-    # Premio del Endoso (único monto entero con coma)
-    premio_match = re.search(r"Premio del Endoso\s*\$?\s*([0-9]{1,3}(?:\.[0-9]{3})*,[0-9]{2})", texto_completo, re.IGNORECASE)
+    # Buscar Premio: buscar montos con menos cantidad de dígitos
+    premio_match = re.findall(r"([0-9.]{1,6},[0-9]{2})", texto_completo)
+    if premio_match:
+        posibles_premios = [p for p in premio_match if float(p.replace('.', '').replace(',', '.')) < 999999]
+        datos["Premio"] = max(posibles_premios, key=lambda x: float(x.replace('.', '').replace(',', '.'))) if posibles_premios else "--"
+    else:
+        datos["Premio"] = "--"
 
-    datos["Premio"] = premio_match.group(1) if premio_match else "--"
-
-    # Cláusula de Ajuste (si existe)
+    # ------- Cláusula de Ajuste -------
     ajuste = buscar(r"Ajuste Autom[aá]tico.*?([0-9]{1,3}\s*%)")
     datos["Cláusula de Ajuste"] = ajuste if ajuste != "--" else "--"
 
-    # Cobertura (busca línea del PLAN)
-    match_plan = re.search(r"PLAN\s*\n?([A-Z0-9 \-]+)", texto_completo, re.IGNORECASE)
-    datos["Cobertura"] = match_plan.group(1).strip() if match_plan else "--"
-
-# ---------- EXPORTAR A EXCEL ----------
+    # ------- Cobertura: línea debajo de "Riesgos Cubiertos" -------
+# Buscar línea con "RIESGOS CUBIERTOS" o similares
+cobertura_match = re.search(r"RIESGOS CUBIERTOS.*?(\n.*?)(?=\n[A-Z ]+|$)", texto_completo, re.IGNORECASE | re.DOTALL)
+if cobertura_match:
+    cobertura = cobertura_match.group(1).strip()
+    # Limpiar si viene con muchas líneas o info redundante
+    cobertura = re.sub(r"\s{2,}", " ", cobertura.replace("\n", " "))
+    datos["Cobertura"] = cobertura
+else:
+    datos["Cobertura"] = "--"
+    
+    # ---------- EXPORTAR A EXCEL ----------
 columnas = ["Marca", "Modelo", "Año", "Suma Asegurada", "Premio", "Cláusula de Ajuste", "Cobertura", "Archivo"]
 fila = {col: datos[col] for col in columnas}
 
