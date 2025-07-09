@@ -1,12 +1,16 @@
 import pdfplumber
 import pandas as pd
 import re
+import os
 from openpyxl.utils import get_column_letter
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, PatternFill
 
-pdf_path = "polizaCompleta138627 (1).pdf"
+# === CONFIG ===
+pdf_path = "data/polizas/polizaRus.pdf"
+nombre_archivo = "rio_uruguay.xlsx"
 
+# === EXTRACCIÓN ===
 datos = {
     "Marca": "",
     "Modelo": "",
@@ -14,7 +18,8 @@ datos = {
     "Suma Asegurada": "",
     "Premio": "--",
     "Cláusula de Ajuste": "--",
-    "Cobertura": "--"
+    "Cobertura": "--",
+    "Archivo": os.path.basename(pdf_path)
 }
 
 with pdfplumber.open(pdf_path) as pdf:
@@ -28,14 +33,18 @@ with pdfplumber.open(pdf_path) as pdf:
         return resultado.group(1).strip() if resultado else ""
 
     # Marca, Modelo, Año
-    match_vehiculo = re.search(r"Marca[:.\s]+([A-Z]+)\s+([A-Z0-9\s.]+)\s+Modelo\s+(\d{4})", texto_completo, re.IGNORECASE)
+    match_vehiculo = re.search(
+        r"Marca y modelo[:.\s]+([A-Z]+)\s+(.+?)\s+Año[:.\s]+(\d{4})",
+        texto_completo,
+        re.IGNORECASE
+    )
     if match_vehiculo:
         datos["Marca"] = match_vehiculo.group(1).strip()
         datos["Modelo"] = match_vehiculo.group(2).strip()
         datos["Año"] = match_vehiculo.group(3).strip()
 
     # Suma Asegurada
-    datos["Suma Asegurada"] = buscar(r"Suma Asegurada[:.\s]+\$?\s*([0-9.,]+)")
+    datos["Suma Asegurada"] = buscar(r"Valor de reposición hasta la suma de[:.\s]+\$?\s*([0-9.,]+)")
 
     # Premio
     datos["Premio"] = buscar(r"Premio\s*[:.]*\s*\$?\s*([0-9.,]+)")
@@ -46,19 +55,30 @@ with pdfplumber.open(pdf_path) as pdf:
 
     # Cobertura
     cobertura_match = re.search(
-        r"Coberturas especif\.del riesgo\s*:?[\s\n]*((?:.+\n)+?)(?=(?:Descripción del Riesgo|Uso del vehículo|Suma Asegurada))",
+        r"Riesgos Cubiertos\s*:?([\s\S]+?)(?=El Asegurador indemnizará|AUXILIO MECÁNICO|Advertencia al Asegurado|CARACTERÍSTICAS Y CONDICIONES|Cláusulas|CUIT|$)",
         texto_completo,
         re.IGNORECASE
     )
-    datos["Cobertura"] = cobertura_match.group(1).strip() if cobertura_match else "--"
 
-# Exportar a Excel
-columnas = ["Marca", "Modelo", "Año", "Suma Asegurada", "Premio", "Cláusula de Ajuste", "Cobertura"]
-df = pd.DataFrame([{col: datos[col] for col in columnas}])
-nombre_archivo = "rio_uruguay.xlsx"
+    if cobertura_match:
+        cobertura_texto = cobertura_match.group(1).strip()
+        cobertura_texto = re.sub(r"\n{2,}", "\n", cobertura_texto)
+        cobertura_texto = re.sub(r"\s{2,}", " ", cobertura_texto)
+        datos["Cobertura"] = cobertura_texto
+
+# === GUARDADO EN EXCEL ===
+columnas = ["Marca", "Modelo", "Año", "Suma Asegurada", "Premio", "Cláusula de Ajuste", "Cobertura", "Archivo"]
+fila_actual = {col: datos[col] for col in columnas}
+
+if os.path.exists(nombre_archivo):
+    df_existente = pd.read_excel(nombre_archivo)
+    df = pd.concat([df_existente, pd.DataFrame([fila_actual])], ignore_index=True)
+else:
+    df = pd.DataFrame([fila_actual])
+
 df.to_excel(nombre_archivo, index=False)
 
-# Formateo de Excel
+# === FORMATO FINAL ===
 wb = load_workbook(nombre_archivo)
 ws = wb.active
 
@@ -86,4 +106,4 @@ for row in ws.iter_rows(min_row=2, max_row=ws.max_row):
     ws.row_dimensions[row[0].row].height = max(15, max_lines * 15)
 
 wb.save(nombre_archivo)
-print(f"✅ Excel generado como {nombre_archivo}")
+print(f"✅ Excel generado o actualizado como {nombre_archivo}")

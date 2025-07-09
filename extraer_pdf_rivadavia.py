@@ -1,19 +1,18 @@
 import pdfplumber
 import pandas as pd
 import re
+import os
 from openpyxl.utils import get_column_letter
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, PatternFill
 
-pdf_path = "C_POLAUT_4529039_20250613_1519275_18922_024002239342001.pdf"
+pdf_path = "data/polizas/polizaRIV.pdf"
 
-# Marcas compuestas comunes
 marcas_compuestas = [
     "MERCEDES BENZ", "ALFA ROMEO", "LAND ROVER", "ROLLS ROYCE", "ASTON MARTIN",
     "CHEVROLET CAPTIVA", "VOLKSWAGEN AMAROK", "GREAT WALL", "MINI COOPER"
 ]
 
-# Estructura base
 datos = {
     "Marca": "",
     "Modelo": "",
@@ -21,10 +20,10 @@ datos = {
     "Suma Asegurada": "--",
     "Premio": "--",
     "Cláusula de Ajuste": "--",
-    "Cobertura": "--"
+    "Cobertura": "--",
+    "Archivo": os.path.basename(pdf_path)
 }
 
-# Extraer texto + buscar premio en tabla
 with pdfplumber.open(pdf_path) as pdf:
     texto = "\n".join([p.extract_text() for p in pdf.pages if p.extract_text()])
 
@@ -65,7 +64,6 @@ with pdfplumber.open(pdf_path) as pdf:
     if premio_match:
         datos["Premio"] = premio_match.group(1)
     else:
-        # Buscar en tablas
         for page in pdf.pages:
             tablas = page.extract_tables()
             for tabla in tablas:
@@ -74,42 +72,67 @@ with pdfplumber.open(pdf_path) as pdf:
                         if celda and re.match(r"\d{5,},\d{2}", celda.strip()):
                             datos["Premio"] = celda.strip()
                             break
-                    if datos["Premio"] != "--":
-                        break
-                if datos["Premio"] != "--":
-                    break
-            if datos["Premio"] != "--":
-                break
 
-    # Cobertura
-    cobertura_match = re.search(r"(CG-RC\s*0?1\.1\s+Responsabilidad Civil.*?)\n", texto, re.IGNORECASE)
-    if cobertura_match:
-        datos["Cobertura"] = cobertura_match.group(1).strip()
+   
+# Cláusula de Ajuste
+    ajuste_match = re.search(r"Ajuste Autom[aá]tico\s*[:\-]?\s*(\d{1,3})\s*%", texto, re.IGNORECASE)
+    if ajuste_match:
+        datos["Cláusula de Ajuste"] = f"{ajuste_match.group(1)}%"
 
-# Crear Excel
-columnas = ["Marca", "Modelo", "Año", "Suma Asegurada", "Premio", "Cláusula de Ajuste", "Cobertura"]
-df = pd.DataFrame([{col: datos[col] for col in columnas}])
+
+# Cobertura (sólo el contenido, sin repetir el título ni el plan)
+cobertura_match = re.search(
+    r"Riesgos Cubiertos y Valores Asegurados.*?\n[-]+\n([\s\S]+?)(?=\n\s*(ADVERTENCIA|CA-CO|CO-EX|Frente de P[oó]liza|$))",
+    texto,
+    re.IGNORECASE
+)
+if cobertura_match:
+    contenido = cobertura_match.group(1).strip()
+    contenido = re.sub(r"\n{2,}", "\n", contenido)
+    contenido = re.sub(r"\s{2,}", " ", contenido)
+
+    # Remover la línea del ajuste automático si ya la usamos
+    contenido = re.sub(r"CA-CC\s*04\.2\s*Ajuste Automático.*", "", contenido, flags=re.IGNORECASE)
+    contenido = re.sub(r"Ajuste Autom[aá]tico\s*[:\-]?\s*\d{1,3}\s*%", "", contenido, flags=re.IGNORECASE)
+
+    datos["Cobertura"] = contenido.strip()
+
+
+
+# Guardar en Excel
+columnas = ["Marca", "Modelo", "Año", "Suma Asegurada", "Premio", "Cláusula de Ajuste", "Cobertura", "Archivo"]
+fila_actual = {col: datos[col] for col in columnas}
 nombre_archivo = "rivadavia.xlsx"
+
+if os.path.exists(nombre_archivo):
+    df_existente = pd.read_excel(nombre_archivo)
+    df = pd.concat([df_existente, pd.DataFrame([fila_actual])], ignore_index=True)
+else:
+    df = pd.DataFrame([fila_actual])
+
 df.to_excel(nombre_archivo, index=False)
 
-# Estética
+# Formato Excel
 wb = load_workbook(nombre_archivo)
 ws = wb.active
-fill_verde = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
+fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
 
 for cell in ws[1]:
-    cell.fill = fill_verde
+    cell.fill = fill
 
 for col in ws.columns:
     col_letter = get_column_letter(col[0].column)
-    max_length = max(len(str(cell.value)) if cell.value else 0 for cell in col)
+    max_len = max(len(str(cell.value)) if cell.value else 0 for cell in col)
     for cell in col:
         cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-    ws.column_dimensions[col_letter].width = 60 if col[0].value == "Cobertura" else max_length + 2
+    if col[0].value == "Cobertura":
+        ws.column_dimensions[col_letter].width = 60
+    else:
+        ws.column_dimensions[col_letter].width = max_len + 2
 
-for row in ws.iter_rows(min_row=2, max_col=ws.max_column, max_row=ws.max_row):
-    max_lines = max(str(cell.value).count("\n") + 1 if cell.value else 1 for cell in row)
+for row in ws.iter_rows(min_row=2, max_row=ws.max_row):
+    max_lines = max(str(c.value).count("\n") + 1 if c.value else 1 for c in row)
     ws.row_dimensions[row[0].row].height = max(15, max_lines * 15)
 
 wb.save(nombre_archivo)
-print(f"✅ Excel generado como {nombre_archivo}")
+print(f"✅ Excel generado o actualizado como {nombre_archivo}")
