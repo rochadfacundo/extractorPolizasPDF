@@ -6,7 +6,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, PatternFill
 
-pdf_path = "data/polizas/polizaRIV.pdf"
+pdf_path = "data/polizas/polizaRIV4.pdf"
 
 marcas_compuestas = [
     "MERCEDES BENZ", "ALFA ROMEO", "LAND ROVER", "ROLLS ROYCE", "ASTON MARTIN",

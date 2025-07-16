@@ -6,7 +6,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, PatternFill
 
-pdf_path = "data/polizas/polizaMA.pdf"
+pdf_path = "data/polizas/polizaMA5.pdf"
 
 datos = {
     "Marca": "",
@@ -35,7 +35,7 @@ with pdfplumber.open(pdf_path) as pdf:
         datos["Modelo"] = " ".join(partes[1:-1]) if len(partes) > 2 else partes[1] if len(partes) > 1 else ""
         datos["Año"] = partes[-1] if partes[-1].isdigit() else ""
 
-    # Premio (refacturado o no)
+    # Premio
     premio = buscar(r"PREMIO TOTAL\s+([0-9.]+,[0-9]{2})")
     if not premio:
         premio = buscar(r"Cuota\s+Vto\.Asegu\..*?\n\s*1\s+[0-9.]+\s+([0-9.,]+)")
@@ -44,6 +44,22 @@ with pdfplumber.open(pdf_path) as pdf:
     if not premio:
         premio = buscar(r"Premio\s*[:]*\s*\$?\s*([0-9.,]+)")
     datos["Premio"] = premio if premio else "--"
+
+    # Suma Asegurada
+    suma_asegurada = buscar(r"Suma Asegurada:\s*\$?\s*([0-9.]+,[0-9]{2})")
+    if not suma_asegurada:
+        suma_asegurada = buscar(r"Suma Asegurada:\s*\$?\s*([0-9.]+)")  # fallback sin decimales
+    datos["Suma Asegurada"] = suma_asegurada if suma_asegurada else "--"
+
+    # Cobertura (entre "Coberturas especif.del riesgo" y "Descripción del Riesgo")
+    match_cobertura = re.search(
+        r"Coberturas especif\.del riesgo\s*\n(.*?)\n\s*Descripción del Riesgo",
+        texto_completo,
+        re.DOTALL | re.IGNORECASE
+    )
+    if match_cobertura:
+        cobertura = match_cobertura.group(1).strip()
+        datos["Cobertura"] = cobertura
 
 # Guardar en Excel (concatenar si existe)
 columnas = ["Marca", "Modelo", "Año", "Suma Asegurada", "Premio", "Cláusula de Ajuste", "Cobertura", "Archivo"]

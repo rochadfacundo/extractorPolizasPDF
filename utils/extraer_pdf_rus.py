@@ -7,7 +7,7 @@ from openpyxl import load_workbook
 from openpyxl.styles import Alignment, PatternFill
 
 # === CONFIG ===
-pdf_path = "data/polizas/polizaRus.pdf"
+pdf_path = "data/polizas/polizaRus4.pdf"
 nombre_archivo = "rio_uruguay.xlsx"
 
 # === EXTRACCIÓN ===
