@@ -5,26 +5,28 @@ import os
 import sys
 import threading
 
-# Para importar desde core/enums.py y utils/
+# Agregar ruta para importar desde core y utils
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from core.enums import Compania
 from utils.extraer_pdf_atm import procesar_atm
 from utils.extraer_pdf_federacion import procesar_federacion
+from utils.extraer_pdf_rivadavia import procesar_rivadavia
+from utils.extraer_pdf_mercantil import procesar_mercantil
+from utils.extraer_pdf_rus import procesar_rus  # 👈 nuevo import
 
 # === FUNCIONES DE RUTA ===
 def obtener_ruta_logo():
     base = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base, "assets", "logo.png")
 
-
-# === CONFIGURACIÓN DE VENTANA ===
+# === CONFIG VENTANA ===
 root = tk.Tk()
 root.title("Extractor de Pólizas PDF")
 root.geometry("550x520")
 root.configure(bg="#f5fff0")
 
-# === ÍCONO DE LA BARRA DE TAREAS (usando PNG) ===
+# === ICONO BARRA DE TAREAS ===
 try:
     icono_png = obtener_ruta_logo()
     if os.path.exists(icono_png):
@@ -40,7 +42,7 @@ except Exception as e:
 frame = tk.Frame(root, bg="#f5fff0")
 frame.pack(fill="both", expand=True)
 
-# === LOGO VISUAL EN PANTALLA ===
+# === LOGO VISUAL ===
 try:
     logo_path = obtener_ruta_logo()
     if os.path.exists(logo_path):
@@ -51,14 +53,13 @@ try:
 except Exception as e:
     print("⚠️ No se pudo cargar el logo:", e)
 
-# === SELECCIÓN DE COMPAÑÍA ===
+# === COMPAÑÍA ===
 tk.Label(frame, text="Seleccioná la compañía aseguradora:", font=("Arial", 12), bg="#f5fff0").pack(pady=5)
-
 combo = ttk.Combobox(frame, font=("Arial", 11), state="readonly")
 combo["values"] = [c.value for c in Compania]
 combo.pack(pady=5)
 
-# === SELECCIÓN DE PDFs ===
+# === PDFs ===
 entry_pdfs = tk.Entry(frame, width=60, font=("Arial", 10), state="readonly")
 entry_pdfs.pack(pady=5)
 
@@ -91,7 +92,7 @@ def habilitar_pdf_inputs(event=None):
 
 combo.bind("<<ComboboxSelected>>", habilitar_pdf_inputs)
 
-# === CONSOLA DE LOGS ===
+# === CONSOLA LOGS ===
 resultado = tk.Text(frame, height=10, font=("Consolas", 10), state="disabled", bg="#ffffff")
 resultado.pack(padx=10, pady=10, fill="both", expand=True)
 
@@ -101,7 +102,7 @@ def logear(texto):
     resultado.see(tk.END)
     resultado.config(state="disabled")
 
-# === PROCESAMIENTO ===
+# === EJECUTAR EXTRACCIÓN ===
 def ejecutar_procesamiento():
     compania = combo.get()
     archivos = entry_pdfs.get().split(";")
@@ -116,11 +117,17 @@ def ejecutar_procesamiento():
             procesar_atm(archivos)
         elif compania == Compania.FEDERACION.value:
             procesar_federacion(archivos)
+        elif compania == Compania.RIVADAVIA.value:
+            procesar_rivadavia(archivos)
+        elif compania == Compania.MERCANTIL.value:
+            procesar_mercantil(archivos)
+        elif compania == Compania.RIO_URUGUAY.value:
+            procesar_rus(archivos)
         logear("✅ Extracción finalizada correctamente.")
     except Exception as e:
         logear(f"❌ Error durante la extracción: {e}")
 
-# === BOTÓN FINAL (con hilo) ===
+# === BOTÓN EXTRAER ===
 btn_extraer = tk.Button(
     frame,
     text="Extraer a Excel",
