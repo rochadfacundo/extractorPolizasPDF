@@ -65,10 +65,32 @@ def procesar_federacion(pdf_paths: list[str]):
             # Cláusula ajuste
             datos["Cláusula de Ajuste"] = buscar(r"Ajuste Autom[aá]tico.*?(\d{1,3}\s*%)")
 
-            # Cobertura
+        # Cobertura
+        # Cargar planes de Federación
+        with open("assets/planesFederacion.json", "r", encoding="utf-8") as f:
+            planes_federacion = json.load(f)
+
+        # Buscar plan en el texto completo (con tolerancia a número y espacios antes)
+        # Buscar plan en el texto completo (normalizando para evitar errores de formato)
+        texto_normalizado = texto.upper().replace("\n", " ")
+        texto_normalizado = re.sub(r"[\s\-]+", " ", texto_normalizado)
+
+        plan_encontrado = None
+        for plan in planes_federacion:
+            plan_normalizado = re.sub(r"[\s\-]+", " ", plan.upper())
+            if plan_normalizado in texto_normalizado:
+                plan_encontrado = plan
+                break
+
+
+        if plan_encontrado:
+            datos["Cobertura"] = plan_encontrado
+        else:
+            # Fallback: buscar texto de cobertura si no encontró un plan
             cobertura_match = re.search(r"RIESGOS CUBIERTOS.*?(\n.*?)(?=\n[A-Z ]+|$)", texto, re.IGNORECASE | re.DOTALL)
             if cobertura_match:
                 datos["Cobertura"] = re.sub(r"\s{2,}", " ", cobertura_match.group(1).replace("\n", " ")).strip()
+
 
         filas.append({col: datos[col] for col in columnas})
 
