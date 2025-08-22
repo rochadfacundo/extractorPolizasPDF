@@ -6,6 +6,7 @@ import json
 from openpyxl.utils import get_column_letter
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, PatternFill
+from utils.resources import asset_path, excel_output_path
 
 # --- helpers cobertura Rivadavia ---
 def _compact_line(s: str) -> str:
@@ -30,8 +31,10 @@ def _cobertura_rivadavia(texto: str) -> str:
 # Leer archivo PDF externo
 def procesar_rivadavia(pdfs: list[str]):
     # Cargar marcas compuestas desde assets
-    with open("assets/marcas.json", encoding="utf-8") as f:
+
+    with open(asset_path("assets", "marcas.json"), encoding="utf-8") as f:
         marcas_data = json.load(f)
+
     marcas_ordenadas = sorted([m["marca"].upper() for m in marcas_data], key=len, reverse=True)
 
     filas = []
@@ -103,7 +106,7 @@ def procesar_rivadavia(pdfs: list[str]):
 
     # Guardar en Excel
     columnas = ["Marca", "Modelo", "Año", "Suma Asegurada", "Premio", "Cláusula de Ajuste", "Cobertura", "Archivo"]
-    nombre_archivo = "rivadavia.xlsx"
+    nombre_archivo = excel_output_path("rivadavia.xlsx")
 
     df_nuevo = pd.DataFrame(filas, columns=columnas)
     if os.path.exists(nombre_archivo):

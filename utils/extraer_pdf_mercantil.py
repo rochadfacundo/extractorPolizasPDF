@@ -6,6 +6,7 @@ import json
 from openpyxl.utils import get_column_letter
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, PatternFill
+from utils.resources import asset_path,excel_output_path
 
 def _extraer_plan_mercantil(texto: str) -> str:
     """
@@ -55,7 +56,7 @@ def _extraer_plan_mercantil(texto: str) -> str:
     return plan
 
 def procesar_mercantil(pdfs: list[str]):
-    with open("assets/marcas.json", "r", encoding="utf-8") as f:
+    with open(asset_path("assets", "marcas.json"), "r", encoding="utf-8") as f:
         marcas_data = json.load(f)
 
     lista_marcas = sorted(
@@ -170,7 +171,7 @@ def procesar_mercantil(pdfs: list[str]):
 
         filas.append({col: datos[col] for col in columnas})
 
-    nombre_archivo = "mercantil.xlsx"
+    nombre_archivo = excel_output_path("mercantil.xlsx")
     if os.path.exists(nombre_archivo):
         df_existente = pd.read_excel(nombre_archivo)
         df = pd.concat([df_existente, pd.DataFrame(filas)], ignore_index=True)

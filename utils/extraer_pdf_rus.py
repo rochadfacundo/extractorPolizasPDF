@@ -5,6 +5,7 @@ import os
 from openpyxl.utils import get_column_letter
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, PatternFill
+from utils.resources import asset_path, excel_output_path
 
 # --- Config detección de cláusula ---
 ALLOWED_PCTS = {"10.0%", "15.0%", "20.0%", "25.0%", "30.0%", "40.0%"}
@@ -155,7 +156,7 @@ def procesar_rus(pdfs: list[str]):
 
         filas.append({col: datos[col] for col in columnas})
 
-    nombre_archivo = "rio_uruguay.xlsx"
+    nombre_archivo = excel_output_path("rio_uruguay.xlsx")
 
     if os.path.exists(nombre_archivo):
         df_existente = pd.read_excel(nombre_archivo)

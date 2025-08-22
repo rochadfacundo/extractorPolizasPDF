@@ -1,0 +1,918 @@
+[
+  {
+    "id": 1,
+    "marca": "ACURA"
+  },
+  {
+    "id": 21,
+    "marca": "AEOLUS"
+  },
+  {
+    "id": 63,
+    "marca": "AGRALE"
+  },
+  {
+    "id": 2,
+    "marca": "ALEKO"
+  },
+  {
+    "id": 3,
+    "marca": "ALFA ROMEO"
+  },
+  {
+    "id": 4,
+    "marca": "ARO"
+  },
+  {
+    "id": 5,
+    "marca": "ASIA"
+  },
+  {
+    "id": 71,
+    "marca": "ASIA CAMION"
+  },
+  {
+    "id": 6,
+    "marca": "AUDI"
+  },
+  {
+    "id": 60,
+    "marca": "AUSTIN"
+  },
+  {
+    "id": 7,
+    "marca": "AUTOBIANCHI"
+  },
+  {
+    "id": 118,
+    "marca": "BAIC"
+  },
+  {
+    "id": 78,
+    "marca": "BELAVTOMAZ"
+  },
+  {
+    "id": 61,
+    "marca": "BERTONE"
+  },
+  {
+    "id": 58,
+    "marca": "BLAC"
+  },
+  {
+    "id": 8,
+    "marca": "BMW"
+  },
+  {
+    "id": 9,
+    "marca": "BUIK"
+  },
+  {
+    "id": 10,
+    "marca": "CADILLAC"
+  },
+  {
+    "id": 124,
+    "marca": "CHANGAN"
+  },
+  {
+    "id": 108,
+    "marca": "CHERY"
+  },
+  {
+    "id": 12,
+    "marca": "CHEVROLET"
+  },
+  {
+    "id": 72,
+    "marca": "CHEVROLET CAM."
+  },
+  {
+    "id": 13,
+    "marca": "CHRYSLER"
+  },
+  {
+    "id": 11,
+    "marca": "CITROEN"
+  },
+  {
+    "id": 129,
+    "marca": "CORADIR"
+  },
+  {
+    "id": 14,
+    "marca": "DACIA"
+  },
+  {
+    "id": 15,
+    "marca": "DAEWOO"
+  },
+  {
+    "id": 16,
+    "marca": "DAIHATSU"
+  },
+  {
+    "id": 93,
+    "marca": "DAIHATSU CAMION"
+  },
+  {
+    "id": 112,
+    "marca": "DFM"
+  },
+  {
+    "id": 119,
+    "marca": "DFSK"
+  },
+  {
+    "id": 89,
+    "marca": "DIMEX"
+  },
+  {
+    "id": 117,
+    "marca": "DS AUTOMOBILES"
+  },
+  {
+    "id": 54,
+    "marca": "ENIAK"
+  },
+  {
+    "id": 69,
+    "marca": "F.E.R.E.S.A."
+  },
+  {
+    "id": 51,
+    "marca": "FERRARI"
+  },
+  {
+    "id": 17,
+    "marca": "FIAT"
+  },
+  {
+    "id": 18,
+    "marca": "FORD"
+  },
+  {
+    "id": 73,
+    "marca": "FORD CAMION"
+  },
+  {
+    "id": 115,
+    "marca": "FOTON"
+  },
+  {
+    "id": 79,
+    "marca": "G.A.Z."
+  },
+  {
+    "id": 116,
+    "marca": "GEELY"
+  },
+  {
+    "id": 121,
+    "marca": "GREAT WALL"
+  },
+  {
+    "id": 64,
+    "marca": "GROSSPAL"
+  },
+  {
+    "id": 52,
+    "marca": "HAM-JIANG"
+  },
+  {
+    "id": 122,
+    "marca": "HAVAL"
+  },
+  {
+    "id": 99,
+    "marca": "HEIBAO"
+  },
+  {
+    "id": 80,
+    "marca": "HINO"
+  },
+  {
+    "id": 19,
+    "marca": "HONDA"
+  },
+  {
+    "id": 49,
+    "marca": "HUMMER"
+  },
+  {
+    "id": 20,
+    "marca": "HYUNDAI"
+  },
+  {
+    "id": 59,
+    "marca": "I.K.A. RENAULT"
+  },
+  {
+    "id": 87,
+    "marca": "INTERNATIONAL"
+  },
+  {
+    "id": 22,
+    "marca": "ISUZU"
+  },
+  {
+    "id": 41,
+    "marca": "IVECO"
+  },
+  {
+    "id": 81,
+    "marca": "IZH"
+  },
+  {
+    "id": 98,
+    "marca": "JAC MOTORS"
+  },
+  {
+    "id": 23,
+    "marca": "JAGUAR"
+  },
+  {
+    "id": 68,
+    "marca": "JINBEI"
+  },
+  {
+    "id": 113,
+    "marca": "JMC"
+  },
+  {
+    "id": 131,
+    "marca": "KAMA"
+  },
+  {
+    "id": 82,
+    "marca": "KAMAZ"
+  },
+  {
+    "id": 83,
+    "marca": "KENWORTH"
+  },
+  {
+    "id": 24,
+    "marca": "KIA"
+  },
+  {
+    "id": 74,
+    "marca": "KIA CAMION"
+  },
+  {
+    "id": 25,
+    "marca": "LADA"
+  },
+  {
+    "id": 53,
+    "marca": "LANCIA"
+  },
+  {
+    "id": 84,
+    "marca": "LIAZ"
+  },
+  {
+    "id": 114,
+    "marca": "LIFAN"
+  },
+  {
+    "id": 109,
+    "marca": "LINCOLN"
+  },
+  {
+    "id": 111,
+    "marca": "MACK"
+  },
+  {
+    "id": 67,
+    "marca": "MAESTRO"
+  },
+  {
+    "id": 55,
+    "marca": "MAHINDRA"
+  },
+  {
+    "id": 102,
+    "marca": "MASERATI"
+  },
+  {
+    "id": 26,
+    "marca": "MAZDA"
+  },
+  {
+    "id": 90,
+    "marca": "MAZDA CAMION"
+  },
+  {
+    "id": 128,
+    "marca": "MCLAREN"
+  },
+  {
+    "id": 28,
+    "marca": "MERCEDES BENZ"
+  },
+  {
+    "id": 75,
+    "marca": "MERCEDES BENZ C"
+  },
+  {
+    "id": 27,
+    "marca": "MERCURY"
+  },
+  {
+    "id": 62,
+    "marca": "METRO"
+  },
+  {
+    "id": 106,
+    "marca": "MINI COOPER"
+  },
+  {
+    "id": 29,
+    "marca": "MITSUBISHI"
+  },
+  {
+    "id": 91,
+    "marca": "MITSUBISHI CAM."
+  },
+  {
+    "id": 77,
+    "marca": "NAKAI (CHANGAN)"
+  },
+  {
+    "id": 30,
+    "marca": "NISSAN"
+  },
+  {
+    "id": 92,
+    "marca": "NISSAN CAMION"
+  },
+  {
+    "id": 31,
+    "marca": "OPEL"
+  },
+  {
+    "id": 32,
+    "marca": "PEUGEOT"
+  },
+  {
+    "id": 94,
+    "marca": "PIAGGIO"
+  },
+  {
+    "id": 105,
+    "marca": "PLYMOUTH"
+  },
+  {
+    "id": 33,
+    "marca": "POLONEZ"
+  },
+  {
+    "id": 34,
+    "marca": "PONTIAC"
+  },
+  {
+    "id": 35,
+    "marca": "PORSCHE"
+  },
+  {
+    "id": 48,
+    "marca": "PROTON"
+  },
+  {
+    "id": 65,
+    "marca": "RANQUEL"
+  },
+  {
+    "id": 56,
+    "marca": "RASTROJERO"
+  },
+  {
+    "id": 36,
+    "marca": "RENAULT"
+  },
+  {
+    "id": 70,
+    "marca": "RENAULT CAMION"
+  },
+  {
+    "id": 107,
+    "marca": "ROLLS ROYCE"
+  },
+  {
+    "id": 37,
+    "marca": "ROVER-LAND ROV."
+  },
+  {
+    "id": 38,
+    "marca": "SAAB"
+  },
+  {
+    "id": 103,
+    "marca": "SANTANA"
+  },
+  {
+    "id": 95,
+    "marca": "SANXING"
+  },
+  {
+    "id": 50,
+    "marca": "SCANIA"
+  },
+  {
+    "id": 39,
+    "marca": "SEAT"
+  },
+  {
+    "id": 126,
+    "marca": "SERO ELECTRIC"
+  },
+  {
+    "id": 133,
+    "marca": "SHACMAN"
+  },
+  {
+    "id": 120,
+    "marca": "SHINERAY"
+  },
+  {
+    "id": 104,
+    "marca": "SIAM DI TELLA"
+  },
+  {
+    "id": 40,
+    "marca": "SKODA"
+  },
+  {
+    "id": 132,
+    "marca": "SKYWELL"
+  },
+  {
+    "id": 110,
+    "marca": "SMART"
+  },
+  {
+    "id": 127,
+    "marca": "SOUEAST"
+  },
+  {
+    "id": 101,
+    "marca": "SPACE"
+  },
+  {
+    "id": 96,
+    "marca": "STAR (3-STAR)"
+  },
+  {
+    "id": 42,
+    "marca": "SUBARU"
+  },
+  {
+    "id": 43,
+    "marca": "SUZUKI"
+  },
+  {
+    "id": 57,
+    "marca": "TATA"
+  },
+  {
+    "id": 76,
+    "marca": "TATA CAMION"
+  },
+  {
+    "id": 44,
+    "marca": "TAVRIA"
+  },
+  {
+    "id": 45,
+    "marca": "TOYOTA"
+  },
+  {
+    "id": 85,
+    "marca": "UAZ"
+  },
+  {
+    "id": 46,
+    "marca": "VOLKSWAGEN"
+  },
+  {
+    "id": 66,
+    "marca": "VOLKSWAGEN CAM."
+  },
+  {
+    "id": 130,
+    "marca": "VOLT"
+  },
+  {
+    "id": 47,
+    "marca": "VOLVO"
+  },
+  {
+    "id": 88,
+    "marca": "VOLVO CAMION"
+  },
+  {
+    "id": 100,
+    "marca": "WULING MOTORS"
+  },
+  {
+    "id": 97,
+    "marca": "YANTAI"
+  },
+  {
+    "id": 86,
+    "marca": "YUEJIN"
+  },
+  {
+    "id": 125,
+    "marca": "ZANELLA"
+  },
+  {
+    "id": 980,
+    "marca": "APPIA"
+  },
+  {
+    "id": 942,
+    "marca": "APRILIA"
+  },
+  {
+    "id": 885,
+    "marca": "BABOON"
+  },
+  {
+    "id": 884,
+    "marca": "BAJAJ"
+  },
+  {
+    "id": 890,
+    "marca": "BENELLI"
+  },
+  {
+    "id": 913,
+    "marca": "BETA"
+  },
+  {
+    "id": 837,
+    "marca": "BLACKSTONE"
+  },
+  {
+    "id": 852,
+    "marca": "BLOOWER"
+  },
+  {
+    "id": 914,
+    "marca": "BMW"
+  },
+  {
+    "id": 928,
+    "marca": "BRAVA"
+  },
+  {
+    "id": 887,
+    "marca": "CAGIVA"
+  },
+  {
+    "id": 946,
+    "marca": "CAN AM"
+  },
+  {
+    "id": 915,
+    "marca": "CERRO"
+  },
+  {
+    "id": 995,
+    "marca": "CF MOTO"
+  },
+  {
+    "id": 925,
+    "marca": "CHIRETTE"
+  },
+  {
+    "id": 939,
+    "marca": "CORVEN"
+  },
+  {
+    "id": 973,
+    "marca": "DA DALT"
+  },
+  {
+    "id": 924,
+    "marca": "DAELIM"
+  },
+  {
+    "id": 846,
+    "marca": "DAYAMA"
+  },
+  {
+    "id": 936,
+    "marca": "DAYANG"
+  },
+  {
+    "id": 935,
+    "marca": "DUCATI"
+  },
+  {
+    "id": 951,
+    "marca": "DYNAMIC"
+  },
+  {
+    "id": 611,
+    "marca": "ECOOTER"
+  },
+  {
+    "id": 944,
+    "marca": "EUROMOT"
+  },
+  {
+    "id": 917,
+    "marca": "FAMSA"
+  },
+  {
+    "id": 839,
+    "marca": "GAMMA"
+  },
+  {
+    "id": 850,
+    "marca": "GAS GAS"
+  },
+  {
+    "id": 997,
+    "marca": "GHIGGERI"
+  },
+  {
+    "id": 940,
+    "marca": "GILERA"
+  },
+  {
+    "id": 941,
+    "marca": "GOES"
+  },
+  {
+    "id": 930,
+    "marca": "GUERRERO"
+  },
+  {
+    "id": 994,
+    "marca": "GUZZI"
+  },
+  {
+    "id": 931,
+    "marca": "HAMATSU"
+  },
+  {
+    "id": 926,
+    "marca": "HARLEY DAVI"
+  },
+  {
+    "id": 961,
+    "marca": "HERO"
+  },
+  {
+    "id": 881,
+    "marca": "HONDA"
+  },
+  {
+    "id": 855,
+    "marca": "HUSQVARNA"
+  },
+  {
+    "id": 848,
+    "marca": "HYOSUNG"
+  },
+  {
+    "id": 843,
+    "marca": "IMSA"
+  },
+  {
+    "id": 610,
+    "marca": "ITALJET"
+  },
+  {
+    "id": 998,
+    "marca": "JAGUAR ATV"
+  },
+  {
+    "id": 886,
+    "marca": "JAWA"
+  },
+  {
+    "id": 966,
+    "marca": "JIALING"
+  },
+  {
+    "id": 912,
+    "marca": "JIANSHE"
+  },
+  {
+    "id": 923,
+    "marca": "JINCHENG"
+  },
+  {
+    "id": 972,
+    "marca": "JINLING"
+  },
+  {
+    "id": 888,
+    "marca": "JUKI"
+  },
+  {
+    "id": 960,
+    "marca": "KAWASAKI"
+  },
+  {
+    "id": 609,
+    "marca": "KAYO"
+  },
+  {
+    "id": 937,
+    "marca": "KELLER"
+  },
+  {
+    "id": 608,
+    "marca": "KIDEN"
+  },
+  {
+    "id": 918,
+    "marca": "KIKAI"
+  },
+  {
+    "id": 883,
+    "marca": "KONISA"
+  },
+  {
+    "id": 849,
+    "marca": "KTM"
+  },
+  {
+    "id": 950,
+    "marca": "KYMCO"
+  },
+  {
+    "id": 842,
+    "marca": "LEGNANO"
+  },
+  {
+    "id": 844,
+    "marca": "LIFAN"
+  },
+  {
+    "id": 603,
+    "marca": "LUCKY LION"
+  },
+  {
+    "id": 970,
+    "marca": "MAVERICK"
+  },
+  {
+    "id": 919,
+    "marca": "MINARELLI"
+  },
+  {
+    "id": 910,
+    "marca": "MONDIAL"
+  },
+  {
+    "id": 616,
+    "marca": "MORBIDELLI"
+  },
+  {
+    "id": 920,
+    "marca": "MOTOMEL"
+  },
+  {
+    "id": 606,
+    "marca": "MOTO MORINI"
+  },
+  {
+    "id": 982,
+    "marca": "MV AGUSTA"
+  },
+  {
+    "id": 604,
+    "marca": "NUUV"
+  },
+  {
+    "id": 934,
+    "marca": "OKINOI"
+  },
+  {
+    "id": 889,
+    "marca": "OLMO"
+  },
+  {
+    "id": 921,
+    "marca": "PANTHER"
+  },
+  {
+    "id": 836,
+    "marca": "PEUGEOT MOTOS"
+  },
+  {
+    "id": 841,
+    "marca": "PIAGGIO"
+  },
+  {
+    "id": 851,
+    "marca": "PIT BIKE"
+  },
+  {
+    "id": 847,
+    "marca": "POLARIS"
+  },
+  {
+    "id": 612,
+    "marca": "QJMOTOR"
+  },
+  {
+    "id": 845,
+    "marca": "RAFTER"
+  },
+  {
+    "id": 991,
+    "marca": "ROYAL ENFIELD"
+  },
+  {
+    "id": 614,
+    "marca": "RVM"
+  },
+  {
+    "id": 615,
+    "marca": "SHERCO"
+  },
+  {
+    "id": 607,
+    "marca": "SIAM"
+  },
+  {
+    "id": 840,
+    "marca": "SKYGO"
+  },
+  {
+    "id": 932,
+    "marca": "SUMO"
+  },
+  {
+    "id": 601,
+    "marca": "SUNRA"
+  },
+  {
+    "id": 602,
+    "marca": "SUPER SOCO"
+  },
+  {
+    "id": 916,
+    "marca": "SUZUKI"
+  },
+  {
+    "id": 853,
+    "marca": "SYM"
+  },
+  {
+    "id": 613,
+    "marca": "TEKNIAL"
+  },
+  {
+    "id": 838,
+    "marca": "TIBO"
+  },
+  {
+    "id": 992,
+    "marca": "TRIUMPH"
+  },
+  {
+    "id": 854,
+    "marca": "TVS"
+  },
+  {
+    "id": 929,
+    "marca": "VELIMOTOR"
+  },
+  {
+    "id": 922,
+    "marca": "VENTO"
+  },
+  {
+    "id": 993,
+    "marca": "VESPA"
+  },
+  {
+    "id": 600,
+    "marca": "VOGE"
+  },
+  {
+    "id": 927,
+    "marca": "XQUAD"
+  },
+  {
+    "id": 943,
+    "marca": "XSCREEMS"
+  },
+  {
+    "id": 911,
+    "marca": "YAMAHA"
+  },
+  {
+    "id": 990,
+    "marca": "ZANELLA MOTOS"
+  }
+]

@@ -1,4 +1,3 @@
-
 import pdfplumber
 import pandas as pd
 import re
@@ -8,11 +7,20 @@ from collections import Counter
 from openpyxl.utils import get_column_letter
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, PatternFill
+from utils.resources import asset_path,excel_output_path
+
+def _to_float_ar(num_str: str) -> float:
+    """Convierte '231.766,69' -> 231766.69 para comparar."""
+    return float(num_str.replace('.', '').replace(',', '.'))
 
 def procesar_federacion(pdf_paths: list[str]):
-    # Cargar marcas
-    with open("assets/marcas.json", "r", encoding="utf-8") as f:
+    # === Cargar assets ===
+    with open(asset_path("assets", "marcas.json"), "r", encoding="utf-8") as f:
         marcas_data = json.load(f)
+
+    with open(asset_path("assets", "planesFederacion.json"), "r", encoding="utf-8") as f:
+        planes_federacion = json.load(f) 
+
     lista_marcas = [m["marca"].upper() for m in marcas_data]
     lista_marcas_ordenadas = sorted(lista_marcas, key=lambda x: len(x.split()), reverse=True)
 
@@ -24,16 +32,15 @@ def procesar_federacion(pdf_paths: list[str]):
         datos["Archivo"] = os.path.basename(pdf_path)
 
         with pdfplumber.open(pdf_path) as pdf:
-            texto = "\n".join([p.extract_text() for p in pdf.pages if p.extract_text()])
+            texto = "\n".join([(p.extract_text() or "") for p in pdf.pages])
 
             def buscar(patron):
-                match = re.search(patron, texto, re.IGNORECASE)
-                return match.group(1).strip() if match else "--"
+                m = re.search(patron, texto, re.IGNORECASE)
+                return m.group(1).strip() if m else "--"
 
-            # Año
-            datos["Año"] = buscar(r"Modelo\s+[^\n]*\n.*\b(\d{4})\b")
-
-            # Marca y modelo
+            # Año (línea de Modelo o al final del modelo)
+            datos["Año"] = buscar(r"Modelo\s+[^\n]*\n.*?\b(19|20)\d{2}\b")
+            # Marca y Modelo
             modelo_match = re.search(r"Modelo\s+[^\n]*\n([^\n]+)", texto, re.IGNORECASE)
             if modelo_match:
                 linea = modelo_match.group(1).strip().upper()
@@ -42,60 +49,53 @@ def procesar_federacion(pdf_paths: list[str]):
                         datos["Marca"] = marca.title()
                         datos["Modelo"] = linea[len(marca):].strip().title()
                         break
+                # Si el año está pegado al final del modelo, separarlo
                 anio_match = re.search(r"(19|20)\d{2}$", datos["Modelo"])
                 if anio_match:
                     datos["Año"] = anio_match.group(0)
-                    datos["Modelo"] = re.sub(r"\s+(19|20)\d{2}$", "", datos["Modelo"])
+                    datos["Modelo"] = re.sub(r"\s+(19|20)\d{2}$", "", datos["Modelo"]).strip()
 
-            # Suma asegurada
-            suma_matches = re.findall(r"SUMA ASEGURADA\s*\$?\s*([\d.,]+)", texto)
+            # Suma Asegurada (toma el valor más frecuente)
+            suma_matches = re.findall(r"SUMA ASEGURADA\s*\$?\s*([\d.,]+)", texto, re.IGNORECASE)
             if suma_matches:
                 datos["Suma Asegurada"] = Counter(suma_matches).most_common(1)[0][0]
 
             # Premio
-            premio_match = re.search(r"PREMIO DEL ENDOSO\s*-?\$?\s*(-?[\d.,]+)", texto)
+            premio_match = re.search(r"PREMIO\s+DEL\s+ENDOSO\s*-?\$?\s*(-?[\d.,]+)", texto, re.IGNORECASE)
             if premio_match:
                 datos["Premio"] = premio_match.group(1).lstrip("-")
             else:
                 posibles = re.findall(r"(\d{1,6}[.,]\d{2})", texto)
-                candidatos = [p for p in posibles if float(p.replace(".", "").replace(",", ".")) < 999999]
+                candidatos = [p for p in posibles if _to_float_ar(p) < 999999]
                 if candidatos:
-                    datos["Premio"] = max(candidatos, key=lambda x: float(x.replace(".", "").replace(",", ".")))
+                    datos["Premio"] = max(candidatos, key=_to_float_ar)
 
-            # Cláusula ajuste
+            # Cláusula de Ajuste
             datos["Cláusula de Ajuste"] = buscar(r"Ajuste Autom[aá]tico.*?(\d{1,3}\s*%)")
 
-        # Cobertura
-        # Cargar planes de Federación
-        with open("assets/planesFederacion.json", "r", encoding="utf-8") as f:
-            planes_federacion = json.load(f)
+            # Cobertura (plan): normalizar y buscar en el texto
+            texto_norm = texto.upper().replace("\n", " ")
+            texto_norm = re.sub(r"[\s\-]+", " ", texto_norm)
+            plan_encontrado = None
+            for plan in planes_federacion:
+                plan_norm = re.sub(r"[\s\-]+", " ", plan.upper())
+                if plan_norm in texto_norm:
+                    plan_encontrado = plan
+                    break
 
-        # Buscar plan en el texto completo (con tolerancia a número y espacios antes)
-        # Buscar plan en el texto completo (normalizando para evitar errores de formato)
-        texto_normalizado = texto.upper().replace("\n", " ")
-        texto_normalizado = re.sub(r"[\s\-]+", " ", texto_normalizado)
-
-        plan_encontrado = None
-        for plan in planes_federacion:
-            plan_normalizado = re.sub(r"[\s\-]+", " ", plan.upper())
-            if plan_normalizado in texto_normalizado:
-                plan_encontrado = plan
-                break
-
-
-        if plan_encontrado:
-            datos["Cobertura"] = plan_encontrado
-        else:
-            # Fallback: buscar texto de cobertura si no encontró un plan
-            cobertura_match = re.search(r"RIESGOS CUBIERTOS.*?(\n.*?)(?=\n[A-Z ]+|$)", texto, re.IGNORECASE | re.DOTALL)
-            if cobertura_match:
-                datos["Cobertura"] = re.sub(r"\s{2,}", " ", cobertura_match.group(1).replace("\n", " ")).strip()
-
+            if plan_encontrado:
+                datos["Cobertura"] = plan_encontrado
+            else:
+                # Fallback: bloque de riesgos cubiertos
+                m_cov = re.search(r"RIESGOS CUBIERTOS.*?(\n.*?)(?=\n[A-Z ]+|$)", texto, re.IGNORECASE | re.DOTALL)
+                if m_cov:
+                    datos["Cobertura"] = re.sub(r"\s{2,}", " ", m_cov.group(1).replace("\n", " ")).strip()
 
         filas.append({col: datos[col] for col in columnas})
 
+    # Excel
     df = pd.DataFrame(filas)
-    nombre_excel = "federacion_patronal.xlsx"
+    nombre_excel = excel_output_path("federacion.xlsx")
     df.to_excel(nombre_excel, index=False)
 
     wb = load_workbook(nombre_excel)

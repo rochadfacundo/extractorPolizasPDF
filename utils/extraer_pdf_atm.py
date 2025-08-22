@@ -7,8 +7,9 @@ import json
 from openpyxl.utils import get_column_letter
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, PatternFill
+from utils.resources import asset_path, excel_output_path
 
-with open("assets/marcas.json", "r", encoding="utf-8") as f:
+with open(asset_path("assets", "marcas.json"), "r", encoding="utf-8") as f:
     marcas_json = json.load(f)
 marcas_lista = [m["marca"].upper() for m in marcas_json]
 
@@ -112,7 +113,7 @@ def procesar_atm(pdfs):
 
     columnas = ["Marca", "Modelo", "Año", "Suma Asegurada", "Premio", "Cláusula de Ajuste", "Cobertura", "Archivo"]
     df = pd.DataFrame(filas, columns=columnas)
-    nombre_archivo = "atm.xlsx"
+    nombre_archivo = excel_output_path("atm.xlsx")
     df.to_excel(nombre_archivo, index=False)
 
     wb = load_workbook(nombre_archivo)

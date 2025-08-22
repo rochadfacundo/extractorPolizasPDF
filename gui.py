@@ -31,7 +31,7 @@ from utils.extraer_pdf_atm import procesar_atm
 from utils.extraer_pdf_federacion import procesar_federacion
 from utils.extraer_pdf_rivadavia import procesar_rivadavia
 from utils.extraer_pdf_mercantil import procesar_mercantil
-from utils.extraer_pdf_rus import procesar_rus  # 👈 nuevo import
+from utils.extraer_pdf_rus import procesar_rus 
 
 # === FUNCIONES DE RUTA ===
 def obtener_ruta_logo():
@@ -44,11 +44,16 @@ root.title("Extractor de Pólizas PDF")
 root.geometry("550x520")
 root.configure(bg="#f5fff0")
 
+try:
+    root.iconbitmap(resource_path("assets/logo.ico"))
+except Exception:
+    pass
+
 # === ICONO BARRA DE TAREAS ===
 try:
     icono_png = obtener_ruta_logo()
     if os.path.exists(icono_png):
-        img_icon = ImageTk.PhotoImage(Image.open(icono_png).resize((32, 32)))
+        img_icon = tk.PhotoImage(Image.open(icono_png).resize((32, 32)))
         root.iconphoto(True, img_icon)
         print("✅ Icono cargado con iconphoto (PNG)")
     else:
