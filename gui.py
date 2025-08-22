@@ -5,6 +5,24 @@ import os
 import sys
 import threading
 
+# al principio de gui.py
+if sys.platform == "win32":
+    import ctypes
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+        u"tecnicayservicios.extractorpolizas.1.0"  # identificador arbitrario/único
+    )
+
+# si usás Tkinter/PySimpleGUI (Tk debajo), asegurá el ícono de la ventana:
+def resource_path(rel):
+    # funciona tanto dentro/fuera de PyInstaller
+    base = getattr(sys, "_MEIPASS", os.path.abspath("."))
+    return os.path.join(base, rel)
+
+# Ej. Tkinter:
+# root.iconbitmap(resource_path("assets/app.ico"))
+# (en PySimpleGUI podés usar window.TKroot.iconbitmap(...) o window.set_icon("assets/app.ico"))
+
+
 # Agregar ruta para importar desde core y utils
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
