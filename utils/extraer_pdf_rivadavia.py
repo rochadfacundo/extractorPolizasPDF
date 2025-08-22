@@ -7,6 +7,26 @@ from openpyxl.utils import get_column_letter
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, PatternFill
 
+# --- helpers cobertura Rivadavia ---
+def _compact_line(s: str) -> str:
+    s = (s or "").replace("\xa0", " ")  # NBSP -> espacio normal
+    return re.sub(r"\s+", " ", s.strip())
+
+def _cobertura_rivadavia(texto: str) -> str:
+    """
+    Devuelve la línea 'Riesgos Cubiertos y Valores Asegurados  <PLAN ...>'
+    tomando exactamente el título + lo que sigue en esa misma línea.
+    """
+    pat = r"(Riesgos\s+Cubiertos\s+y\s+Valores\s+Asegurados)\s+([^\n\r]+)"
+    m = re.search(pat, texto, re.IGNORECASE)
+    if not m:
+        return "--"
+    titulo = "Riesgos Cubiertos y Valores Asegurados"
+    plan = _compact_line(m.group(2))
+    # Limpieza suave si la línea termina en guiones sueltos
+    plan = re.sub(r"\s*[-–—_]{2,}\s*$", "", plan)
+    return f"{titulo}  {plan}"
+
 # Leer archivo PDF externo
 def procesar_rivadavia(pdfs: list[str]):
     # Cargar marcas compuestas desde assets
@@ -29,7 +49,7 @@ def procesar_rivadavia(pdfs: list[str]):
         }
 
         with pdfplumber.open(pdf_path) as pdf:
-            texto = "\n".join([p.extract_text() for p in pdf.pages if p.extract_text()])
+            texto = "\n".join([(p.extract_text() or "") for p in pdf.pages])
 
             def buscar(patron, multilinea=True):
                 flags = re.MULTILINE | re.IGNORECASE if multilinea else re.IGNORECASE
@@ -61,13 +81,14 @@ def procesar_rivadavia(pdfs: list[str]):
             if premio_match:
                 datos["Premio"] = premio_match.group(1)
             else:
+                # Fallback: buscar en tablas
                 for page in pdf.pages:
                     tablas = page.extract_tables()
-                    for tabla in tablas:
-                        for fila in tabla:
-                            for celda in fila:
-                                if celda and re.match(r"\d{5,},\d{2}", celda.strip()):
-                                    datos["Premio"] = celda.strip()
+                    for tabla in tablas or []:
+                        for fila in tabla or []:
+                            for celda in fila or []:
+                                if celda and re.match(r"\d{5,},\d{2}", str(celda).strip()):
+                                    datos["Premio"] = str(celda).strip()
                                     break
 
             # Cláusula de Ajuste
@@ -75,19 +96,8 @@ def procesar_rivadavia(pdfs: list[str]):
             if ajuste:
                 datos["Cláusula de Ajuste"] = f"{ajuste}%"
 
-            # Cobertura
-            cobertura_match = re.search(
-                r"Riesgos Cubiertos y Valores Asegurados.*?\n[-]+\n([\s\S]+?)(?=\n\s*(ADVERTENCIA|CA-CO|CO-EX|Frente de P[oó]liza|$))",
-                texto,
-                re.IGNORECASE
-            )
-            if cobertura_match:
-                contenido = cobertura_match.group(1)
-                contenido = re.sub(r"\n{2,}", "\n", contenido)
-                contenido = re.sub(r"\s{2,}", " ", contenido)
-                contenido = re.sub(r"CA-CC\s*04\.2\s*Ajuste Automático.*", "", contenido, flags=re.IGNORECASE)
-                contenido = re.sub(r"Ajuste Autom[aá]tico\s*[:\-]?\s*\d{1,3}\s*%", "", contenido, flags=re.IGNORECASE)
-                datos["Cobertura"] = contenido.strip()
+            # Cobertura (solo la línea título + plan)
+            datos["Cobertura"] = _cobertura_rivadavia(texto)
 
         filas.append(datos)
 

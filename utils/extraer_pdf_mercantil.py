@@ -7,6 +7,53 @@ from openpyxl.utils import get_column_letter
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, PatternFill
 
+def _extraer_plan_mercantil(texto: str) -> str:
+    """
+    En el bloque 'Coberturas especif.del riesgo' toma SOLO la línea de plan,
+    p.ej.: 'M PLUS-RCL INC/ROB.TOT.Y PAR/ACC.TOT', 'A - RESPONSABILIDAD CIVIL LIMITADA', etc.
+    """
+    m = re.search(
+        r"Coberturas especif\.del riesgo\s*\n([\s\S]+?)\n\s*Descripci[oó]n del Riesgo",
+        texto, re.IGNORECASE
+    )
+    if not m:
+        return ""
+    bloque = m.group(1)
+    lineas = [ln.strip() for ln in bloque.splitlines() if ln and ln.strip()]
+
+    plan = ""
+    despues_de_rc = False
+    for ln in lineas:
+        if re.search(r"^Responsabilidad\s+civil", ln, re.IGNORECASE):
+            despues_de_rc = True
+            continue
+        if despues_de_rc:
+            # Línea candidata: toda en MAYÚSCULAS y que no sea un detalle (Daños/Granizo/etc.)
+            if ln.upper() == ln and not re.match(
+                r"^(DAÑOS|GRANIZO|ROBO|HUELGA|TERREMOTO|INUNDACI[ÓO]N)", ln, re.IGNORECASE
+            ):
+                plan = ln
+                break
+
+    # Fallbacks
+    if not plan:
+        cand = re.search(
+            r"(?mi)^(?:[ABCMDR]\s*(?:-|–)\s*)?RESPONSABILIDAD CIVIL LIMITADA[^\n]*$",
+            bloque
+        )
+        if cand:
+            plan = cand.group(0).strip()
+
+    if not plan:
+        cand = re.search(
+            r"(?mi)^(?:M\s*(?:PLUS|BAS\.?|BASE|PREMIUM)|B[-0]|B\s*[-.]|C\s*\d?|M\s*BAS\.)[^\n]*RCL[^\n]*$",
+            bloque
+        )
+        if cand:
+            plan = cand.group(0).strip()
+
+    return plan
+
 def procesar_mercantil(pdfs: list[str]):
     with open("assets/marcas.json", "r", encoding="utf-8") as f:
         marcas_data = json.load(f)
@@ -33,15 +80,44 @@ def procesar_mercantil(pdfs: list[str]):
         }
 
         with pdfplumber.open(pdf_path) as pdf:
-            texto_completo = "\n".join([p.extract_text() for p in pdf.pages if p.extract_text()])
+            texto_completo = "\n".join([p.extract_text() or "" for p in pdf.pages])
 
-            def buscar(patron, multilinea=True):
+            # buscar() con fuente opcional (por defecto usa texto_completo)
+            def buscar(patron, fuente=None, multilinea=True):
+                txt = texto_completo if fuente is None else fuente
                 flags = re.MULTILINE | re.IGNORECASE if multilinea else re.IGNORECASE
-                resultado = re.search(patron, texto_completo, flags)
-                return resultado.group(1).strip() if resultado else ""
+                r = re.search(patron, txt, flags)
+                return r.group(1).strip() if r else ""
 
-            # Marca / Modelo / Año
-            marca_modelo = buscar(r"Marca.*?: ([^\n]+)")
+            # ---------------- Bloque: Descripción del Riesgo ----------------
+            bloque_riesgo_m = re.search(
+                r"Descripci[oó]n del Riesgo\s*([\s\S]+?)(?=\n\s*(Anexos|Plan de Pago|Prima|Cobert\.|Cl[aá]usulas|$))",
+                texto_completo, re.IGNORECASE
+            )
+            vehiculo_tipo = ""
+            marca_linea_riesgo = ""
+            anio_riesgo = ""
+
+            def _clean_modelo(s: str) -> str:
+                s = re.sub(r"^S/?DESCR\.?\s*", "", s or "", flags=re.IGNORECASE).strip()
+                return re.sub(r"\s+", " ", s)
+
+            if bloque_riesgo_m:
+                bloque_riesgo = bloque_riesgo_m.group(1)
+                vehiculo_tipo = buscar(r"Veh[íi]culo[:.\s]+([^\n]+)", bloque_riesgo)
+
+                # Ejemplo habitual: "Marca: S/DESCR. ...   Modelo: 2009"
+                mm = re.search(r"Marca[:.\s]+(.+?)\s+Modelo[:.\s]+(\d{4})", bloque_riesgo, re.IGNORECASE)
+                if mm:
+                    marca_linea_riesgo = mm.group(1).strip()
+                    anio_riesgo = mm.group(2)
+                else:
+                    # Variantes en líneas separadas
+                    marca_linea_riesgo = buscar(r"Marca[:.\s]+([^\n]+)", bloque_riesgo)
+                    anio_riesgo = buscar(r"(?:Modelo|A[ÑN]O(?:\s*FABRICACI[ÓO]N)?)[:.\s]+(\d{4})", bloque_riesgo)
+
+            # ---------------- Marca / Modelo / Año (método clásico) ----------------
+            marca_modelo = buscar(r"Marca.*?:\s*([^\n]+)")
             if marca_modelo:
                 texto = marca_modelo.upper()
                 for marca in lista_marcas:
@@ -55,31 +131,42 @@ def procesar_mercantil(pdfs: list[str]):
                         datos["Modelo"] = " ".join(partes).title()
                         break
 
-            # Premio
+            # ---------------- Reglas especiales: CUATRICICLO / TRAILER ----------------
+            if vehiculo_tipo:
+                vt = vehiculo_tipo.upper()
+                if "CUATRICICL" in vt:
+                    datos["Marca"] = "Cuatriciclo"
+                    if marca_linea_riesgo:
+                        datos["Modelo"] = _clean_modelo(marca_linea_riesgo)  # preserva MAYÚSCULAS
+                    if anio_riesgo:
+                        datos["Año"] = anio_riesgo
+                elif any(k in vt for k in ["TRAILER", "TRÁILER", "REMOLQUE", "ACOPLADO"]):
+                    datos["Marca"] = "Trailer"
+                    if marca_linea_riesgo:
+                        datos["Modelo"] = _clean_modelo(marca_linea_riesgo)
+                    if anio_riesgo:
+                        datos["Año"] = anio_riesgo
+
+            # ---------------- Premio ----------------
             premio = (
-                buscar(r"PREMIO TOTAL\s+([0-9.]+,[0-9]{2})") or
-                buscar(r"Cuota\s+Vto\.Asegu\..*?\n\s*1\s+[0-9.]+\s+([0-9.,]+)") or
-                buscar(r"Importe\s*\n([0-9.]+,[0-9]{2})") or
-                buscar(r"Premio\s*[:]*\s*\$?\s*([0-9.,]+)")
+                buscar(r"PREMIO\s*TOTAL\s*\$?\s*([0-9.]+,[0-9]{2})") or
+                buscar(r"Prima\s*:?\s*\$?\s*[0-9.,]+\s+Premio\s*:?\s*\$?\s*([0-9.]+,[0-9]{2})") or
+                buscar(r"Plan de Pago.*?\n\s*1\s+[0-9./-]+\s*([0-9.]+,[0-9]{2})") or
+                buscar(r"Premio\s*[:]*\s*\$?\s*([0-9.]+,[0-9]{2})")
             )
             datos["Premio"] = premio if premio else "--"
 
-            # Suma Asegurada
+            # ---------------- Suma Asegurada ----------------
             suma_asegurada = (
-                buscar(r"Suma Asegurada:\s*\$?\s*([0-9.]+,[0-9]{2})") or
-                buscar(r"Suma Asegurada:\s*\$?\s*([0-9.]+)")
+                buscar(r"Suma Asegurada\s*:\s*\$?\s*([0-9.]+,[0-9]{2})") or
+                buscar(r"Suma Asegurada\s*:\s*\$?\s*([0-9.]+)")
             )
             datos["Suma Asegurada"] = suma_asegurada if suma_asegurada else "--"
 
-            # Cobertura
-            match_cobertura = re.search(
-                r"Coberturas especif\.del riesgo\s*\n(.*?)\n\s*Descripción del Riesgo",
-                texto_completo,
-                re.DOTALL | re.IGNORECASE
-            )
-            if match_cobertura:
-                cobertura = match_cobertura.group(1).strip()
-                datos["Cobertura"] = cobertura
+            # ---------------- Cobertura (plan) ----------------
+            plan = _extraer_plan_mercantil(texto_completo)
+            if plan:
+                datos["Cobertura"] = plan
 
         filas.append({col: datos[col] for col in columnas})
 
